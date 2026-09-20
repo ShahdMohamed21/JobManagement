@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace JobManagement.Application.DTOs.JobApplications
+{
+    public class JobApplicationResponse
+    {
+        public int Id { get; set; }
+
+        public int JobId { get; set; }
+
+        public string CandidateId { get; set; } = null!;
+
+        public string Status { get; set; } = null!;
+
+        public DateTime AppliedAt { get; set; }
+    }
+}
