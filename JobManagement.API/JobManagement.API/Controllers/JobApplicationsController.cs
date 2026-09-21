@@ -1,5 +1,8 @@
 ﻿using JobManagement.Application.DTOs.JobApplications;
+using JobManagement.Application.Features.JobApplications.Commands.CancelApplication;
+using JobManagement.Application.Features.JobApplications.Commands.CreateApplication;
 using JobManagement.Application.Interfaces;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -11,17 +14,16 @@ namespace JobManagement.API.Controllers;
 [Authorize(Roles = "Candidate")]
 public class JobApplicationsController : ControllerBase
 {
-    private readonly IJobApplicationService _applicationService;
+    private readonly IMediator _mediator;
 
-    public JobApplicationsController(
-        IJobApplicationService applicationService)
+    public JobApplicationsController(IMediator mediator)
     {
-        _applicationService = applicationService;
+        _mediator = mediator;
     }
 
     [HttpPost]
     public async Task<IActionResult> Apply(
-        CreateApplicationRequest request)
+    CreateApplicationRequest request)
     {
         var candidateId =
             User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -29,14 +31,12 @@ public class JobApplicationsController : ControllerBase
         if (candidateId == null)
             return Unauthorized();
 
-        var application =
-            await _applicationService.CreateApplicationAsync(
-                request,
-                candidateId);
+        var command = new CreateApplicationCommand( request.JobId, candidateId);
+
+        var application = await _mediator.Send(command);
 
         if (application == null)
-            return BadRequest(
-                "Job is not available or you already applied.");
+            return BadRequest("Job is not available or you already applied");
 
         return Ok(application);
     }
@@ -44,16 +44,13 @@ public class JobApplicationsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> CancelApplication(int id)
     {
-        var candidateId =
-            User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var candidateId =User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (candidateId == null)
             return Unauthorized();
 
-        var cancelled =
-            await _applicationService.CancelApplicationAsync(
-                id,
-                candidateId);
+        var command=new CancelApplicationCommand(id, candidateId);
+        var cancelled=await _mediator.Send(command);
 
         if (!cancelled)
             return NotFound();

@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\JobManagement.API.props" />
-</Project>

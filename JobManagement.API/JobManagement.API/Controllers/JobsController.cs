@@ -1,5 +1,9 @@
 ﻿using JobManagement.Application.DTOs.Jobs;
+using JobManagement.Application.Features.Jobs.Commands.CancelJob;
+using JobManagement.Application.Features.Jobs.Commands.CreateJob;
+using JobManagement.Application.Features.Jobs.Queries.GetAllJobs;
 using JobManagement.Application.Interfaces;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -10,17 +14,16 @@ namespace JobManagement.API.Controllers;
 [Route("api/[controller]")]
 public class JobsController : ControllerBase
 {
-    private readonly IJobService _jobService;
-
-    public JobsController(IJobService jobService)
+    private readonly IMediator _mediator;
+    public JobsController(IMediator mediator)
     {
-        _jobService = jobService;
+        _mediator = mediator;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAllJobs()
     {
-        var jobs = await _jobService.GetAllJobsAsync();
+        var jobs = await _mediator.Send(new GetAllJobsQuery());
 
         return Ok(jobs);
     }
@@ -31,26 +34,30 @@ public class JobsController : ControllerBase
         var recruiterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (recruiterId == null)
-            return Unauthorized();
+           return Unauthorized();
 
-        var job = await _jobService.CreateJobAsync(request, recruiterId);
+        var command = new CreateJobCommand( request.Title,request.Description,recruiterId);
+        var job = await _mediator.Send(command);
 
         return Ok(job);
     }
     [HttpDelete("{id}")]
     [Authorize(Roles = "Recruiter")]
-    public async Task<IActionResult> DeleteJob(int id)
+    public async Task<IActionResult> CancelJob(int id)
     {
         var recruiterId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (recruiterId == null)
             return Unauthorized();
 
-        var deleted = await _jobService.SoftDeleteJobAsync(id, recruiterId);
+        var command = new CancelJobCommand(id,recruiterId);
 
-        if (!deleted)
+        var result = await _mediator.Send(command);
+
+        if (!result)
             return NotFound();
 
         return NoContent();
     }
+
 }

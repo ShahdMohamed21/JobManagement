@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using JobManagement.Application.Interfaces.Repositories;
+using JobManagement.Infrastructure.Repositories;
+using JobManagement.Application.Features.Jobs.Queries.GetAllJobs;
 
 namespace JobManagement.API
 {
@@ -64,9 +67,14 @@ namespace JobManagement.API
             builder.Services.AddScoped<ITokenService, TokenService>();
             builder.Services.AddScoped<IJobService, JobService>();
             builder.Services.AddScoped<IJobApplicationService, JobApplicationService>();
+            builder.Services.AddScoped<IJobRepository, JobRepository>();
+            builder.Services.AddScoped<IJobApplicationRepository,JobApplicationRepository>();
 
             builder.Services.Configure<JwtSettings>(
                 builder.Configuration.GetSection("Jwt"));
+            builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(
+        typeof(GetAllJobsQueryHandler).Assembly));
 
             builder.Services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
