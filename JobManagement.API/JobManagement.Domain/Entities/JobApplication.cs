@@ -18,5 +18,6 @@ namespace JobManagement.Domain.Entities
         public ApplicationStatus Status { get; set; } = ApplicationStatus.Applied;
 
         public DateTime AppliedAt { get; set; }
+        public Job Job { get; set; } = null!;
     }
 }

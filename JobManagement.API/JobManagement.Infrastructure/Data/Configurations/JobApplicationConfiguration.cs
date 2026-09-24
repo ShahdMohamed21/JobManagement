@@ -35,6 +35,10 @@ namespace JobManagement.Infrastructure.Data.Configurations
                 .WithMany()
                 .HasForeignKey(a => a.CandidateId)
                 .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(a => a.Job)
+           .WithMany()
+           .HasForeignKey(a => a.JobId)
+           .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

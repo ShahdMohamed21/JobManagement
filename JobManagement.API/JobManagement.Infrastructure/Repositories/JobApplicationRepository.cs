@@ -70,5 +70,55 @@ namespace JobManagement.Infrastructure.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+        public async Task<List<JobApplicationResponse>> GetMyApplicationsAsync( string candidateId)
+        {
+            return await _context.JobApplications
+                .AsNoTracking()
+                .Where(a => a.CandidateId == candidateId)
+                .Select(a => new JobApplicationResponse
+                {
+                    Id = a.Id,
+                    JobId = a.JobId,
+                    CandidateId = a.CandidateId,
+                    Status = a.Status.ToString(),
+                    AppliedAt = a.AppliedAt
+                })
+                .ToListAsync();
+        }
+        public async Task<List<JobApplicationResponse>> GetRecruiterApplicationsAsync(string recruiterId)
+        {
+            return await _context.JobApplications
+                .AsNoTracking()
+                .Where(a => a.Job.RecruiterId == recruiterId)
+                .Select(a => new JobApplicationResponse
+                {
+                    Id = a.Id,
+                    JobId = a.JobId,
+                    CandidateId = a.CandidateId,
+                    Status = a.Status.ToString(),
+                    AppliedAt = a.AppliedAt
+                })
+                .ToListAsync();
+        }
+        public async Task<bool> UpdateApplicationStatusAsync(int applicationId, string recruiterId, ApplicationStatus status)
+        {
+            var application = await _context.JobApplications
+                .Include(a => a.Job)
+                .FirstOrDefaultAsync(a =>
+                    a.Id == applicationId &&
+                    a.Job.RecruiterId == recruiterId);
+
+            if (application == null)
+                return false;
+
+            if (application.Status == ApplicationStatus.Cancelled)
+                return false;
+
+            application.Status = status;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

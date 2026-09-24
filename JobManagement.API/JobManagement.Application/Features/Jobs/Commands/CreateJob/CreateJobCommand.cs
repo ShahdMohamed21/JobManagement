@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace JobManagement.Application.Features.Jobs.Commands.CreateJob
 {
-    public record CreateJobCommand(string Title,string Description, string RecruiterId) : IRequest<JobResponse?>
+    public record CreateJobCommand(string Title,string Description, string RecruiterId,DateTime? ExpiryDate) : IRequest<JobResponse?>
     {
     }
 }

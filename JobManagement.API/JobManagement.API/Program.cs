@@ -12,6 +12,7 @@ using System.Text;
 using JobManagement.Application.Interfaces.Repositories;
 using JobManagement.Infrastructure.Repositories;
 using JobManagement.Application.Features.Jobs.Queries.GetAllJobs;
+using Hangfire;
 
 namespace JobManagement.API
 {
@@ -57,6 +58,10 @@ namespace JobManagement.API
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddHangfire(config =>
+            config.UseSqlServerStorage(
+            builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddHangfireServer();
 
             builder.Services
                 .AddIdentity<ApplicationUser, IdentityRole>()
@@ -69,7 +74,11 @@ namespace JobManagement.API
             builder.Services.AddScoped<IJobApplicationService, JobApplicationService>();
             builder.Services.AddScoped<IJobRepository, JobRepository>();
             builder.Services.AddScoped<IJobApplicationRepository,JobApplicationRepository>();
-
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IJobMaintenanceService, JobMaintenanceService>();
+            builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+            builder.Services.AddScoped<IBackgroundJobService, BackgroundJobService>();
+            builder.Services.AddScoped<NotificationService>();
             builder.Services.Configure<JwtSettings>(
                 builder.Configuration.GetSection("Jwt"));
             builder.Services.AddMediatR(cfg =>
@@ -97,6 +106,16 @@ namespace JobManagement.API
                 });
 
             var app = builder.Build();
+
+            var recurringJobManager =
+                app.Services.GetRequiredService<IRecurringJobManager>();
+
+            recurringJobManager.AddOrUpdate<IJobMaintenanceService>(
+                "close-expired-jobs",
+                service => service.CloseExpiredJobsAsync(),
+                Cron.Daily);
+
+            app.UseHangfireDashboard("/hangfire");
 
             using (var scope = app.Services.CreateScope())
             {

@@ -30,6 +30,8 @@ namespace JobManagement.Infrastructure.Data.Configurations
 
             builder.Property(j => j.RecruiterId)
                 .IsRequired();
+            builder.Property(j => j.ExpiryDate)
+            .IsRequired(false);
 
             builder.HasOne<ApplicationUser>()
                 .WithMany()

@@ -19,5 +19,6 @@ namespace JobManagement.Domain.Entities
         public DateTime CreatedAt { get; set; }
 
         public string RecruiterId { get; set; } = null!;
+        public DateTime? ExpiryDate { get; set; }
     }
 }

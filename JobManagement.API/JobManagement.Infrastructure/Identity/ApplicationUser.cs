@@ -10,5 +10,6 @@ namespace JobManagement.Infrastructure.Identity
     public class ApplicationUser : IdentityUser
     {
         public string? CVUrl { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }
